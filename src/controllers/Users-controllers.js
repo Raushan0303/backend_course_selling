@@ -6,6 +6,7 @@ import { JWT_SECRET } from "../config/config.js";
 import dotenv from 'dotenv';
 import { generateOtp } from "../utils/otp.utils.js";
 import { sendOtp } from "../utils/send-otp.js";
+import passport from "passport";
 dotenv.config();
 
 
@@ -136,4 +137,36 @@ export const signin = async (req, res) => {
       });
     }
   };
-  
+  // Trigger Google OAuth flow
+export const googleAuth = passport.authenticate('google', {
+  scope: ['profile', 'email']  
+});
+
+
+
+export const googleAuthCallback = (req, res, next) => {
+  passport.authenticate('google', async (err, user) => {
+    if (err || !user) {
+      console.log('Error or no user:', err, user); 
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication failed',
+      });
+    }
+    const payload = {
+      id: user._id,  
+      name: user.name,
+      email: user.email,
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { 
+      expiresIn: '1h'  
+    });
+
+    res.json({
+      success: true,
+      token, 
+      message: 'User authenticated successfully',
+    });
+  })(req, res, next);
+};

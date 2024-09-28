@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true, 
+      },
     name: {
         type: String,
         required: true
@@ -8,7 +13,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true  // Ensure email is unique
+        unique: true  
     },
     password: {
         type: String,
@@ -28,7 +33,7 @@ const userSchema = new mongoose.Schema({
         required: false,
     },
     otpExpires: {
-        type: Date  // Optional: Track OTP expiration time
+        type: Date  
     }
 }, { timestamps: true });
 

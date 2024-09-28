@@ -12,13 +12,13 @@ export const configurePassport = (passport) => {
     passport.use(
       new JwtStrategy(opts, async (jwt_payload, done) => {
         try {
-          const user = await User.findById(jwt_payload.id); // Look for the user in DB using ID from JWT payload
+          const user = await User.findById(jwt_payload.id); 
           if (user) {
-            return done(null, user); // User found, pass user object
+            return done(null, user); 
           }
-          return done(null, false);  // No user found
+          return done(null, false);  
         } catch (error) {
-          return done(error, false); // In case of an error
+          return done(error, false); 
         }
       })
     );
