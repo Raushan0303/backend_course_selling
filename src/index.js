@@ -3,34 +3,33 @@ import bodyParser from 'body-parser';
 import { connect } from './config/db.js';
 import passport from 'passport';
 import session from 'express-session';
-import './config/passport-google.js'; // Import the file where you configured GoogleStrategy
-import apiRoutes from './routes/userRouter.js';
+import './config/passport-google.js';
+import userRoutes from './routes/userRouter.js';
+import courseRoute from './routes/courseRouter.js'
 import { Secret_key } from './config/config.js';
 
-// Initialize Express app
+
 const app = express();
 
-// Body parser middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Session management (required for persistent login)
 app.use(session({
-  secret: Secret_key,  // Use a strong secret key
+  secret: Secret_key,  
   resave: false,
   saveUninitialized: true,
 }));
 
-// Passport middleware
 app.use(passport.initialize());
-app.use(passport.session()); // If you plan to maintain user sessions
+app.use(passport.session()); 
 
-// Use your API routes
-app.use('/api/v1', apiRoutes);
 
-// Start server and connect to MongoDB
+app.use('/api/v1', userRoutes);
+app.use('/api/v1',courseRoute);
+
+
 app.listen(3000, async () => {
   console.log(`Server is running on port 3000`);
-  await connect(); // Ensure this is correctly set up to connect to MongoDB
+  await connect(); 
   console.log('MongoDB connected');
 });

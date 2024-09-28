@@ -62,14 +62,18 @@ const courseSchema = new Schema({
   description: {
     type: String
  },  
+  price:{
+    type: String,
+    required: true
+  },
   sections: [sectionSchema],  
-  createdBy: {
-    type: Schema.Types.ObjectId, 
-    ref: 'User',
-    required: true 
- }  // Reference to the course creator (optional)
+//   createdBy: {
+//     type: Schema.Types.ObjectId, 
+//     ref: 'User',
+//     required: true 
+//  }  // Reference to the course creator (optional)
 });
 
 const Course = mongoose.model('Course', courseSchema);
 
-module.exports = Course;
+export default Course
