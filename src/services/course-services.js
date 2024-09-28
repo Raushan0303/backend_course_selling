@@ -90,7 +90,25 @@ class CourseService {
             throw new Error("Error deleting course");
         }
     }
-
+    async deleteCourseSection(courseId, sectionId) {
+        try {
+            const course = await Course.findById(courseId);
+    
+            if (!course) {
+                throw new Error("Course not found");
+            }
+    
+            const updatedSections = course.sections.filter(section => section._id.toString() !== sectionId);
+    
+            course.sections = updatedSections;
+    
+            const updatedCourse = await course.save();
+            return updatedCourse;
+        } catch (error) {
+            console.error("Error deleting section from course:", error);
+            throw new Error("Error deleting section from course");
+        }
+    }
     
 }
 

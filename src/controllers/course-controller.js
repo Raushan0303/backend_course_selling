@@ -134,3 +134,24 @@ export const deleteCourse = async (req, res) => {
         });
     }
 };
+
+
+export const deleteCourseSection = async (req, res) => {
+    try {
+        const { courseId, sectionId } = req.params; 
+
+        const updatedCourse = await courseService.deleteCourseSection(courseId, sectionId);
+        res.status(200).json({
+            type: "success",
+            message: "Section deleted successfully",
+            data: updatedCourse
+        });
+    } catch (error) {
+        console.error("Error in deleteCourseSection controller:", error);
+        res.status(500).json({
+            type: "error",
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
