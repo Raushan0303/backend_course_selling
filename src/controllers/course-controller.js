@@ -25,12 +25,12 @@ export const create = async(req,res) => {
 }
 
 
-export const updateSection = async(req,res)=>{
+export const addCourseSection = async(req,res)=>{
     try {
-        const {id:courseId} = req.params;
-        const sectionData = req.body;
+        const {courseid:courseId} = req.params;
+        const addedsectionData = req.body;
        
-        const updatedCourse = await courseService.updateCourseSection(courseId,sectionData);
+        const updatedCourse = await courseService.addCourseSection(courseId,addedsectionData);
 
         res.status(200).json({
             type: "success",
@@ -46,3 +46,26 @@ export const updateSection = async(req,res)=>{
         })
     }
 }
+
+export const updateSection = async(req, res) => {
+    try {
+      const { courseId, sectionId } = req.params;  // Retrieve courseId and sectionId from params
+      const sectionData = req.body;  // Retrieve section data from the request body
+      
+      const updatedCourse = await courseService.updataCourseSection(courseId, sectionId, sectionData);
+      
+      res.status(200).json({
+        type: "success",
+        message: "Course section updated successfully",
+        data: updatedCourse
+      });
+    } catch (error) {
+      console.log("Error updating course", error);
+      res.status(500).json({
+        type: "error",
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  };
+  
