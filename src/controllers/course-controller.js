@@ -106,3 +106,31 @@ export const getCourseById = async (req, res) => {
         });
     }
 };
+
+export const deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params; 
+
+        const deletedCourse = await courseService.deleteCourse(courseId);
+
+        if (!deletedCourse) {
+            return res.status(404).json({
+                type: "error",
+                message: "Course not found",
+            });
+        }
+
+        res.status(200).json({
+            type: "success",
+            message: "Course deleted successfully",
+            data: deletedCourse
+        });
+    } catch (error) {
+        console.error("Error in deleteCourse controller:", error);
+        res.status(500).json({
+            type: "error",
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};

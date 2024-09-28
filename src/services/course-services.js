@@ -80,6 +80,18 @@ class CourseService {
             throw new Error("Error fetching course");
         }
     }
+
+    async deleteCourse(courseId){
+        try {
+            const deleteCourse = await Course.findByIdAndDelete(courseId);
+            return deleteCourse;
+        } catch (error) {
+            console.error("Error deleting course by ID:", error);
+            throw new Error("Error deleting course");
+        }
+    }
+
+    
 }
 
 export default CourseService;
