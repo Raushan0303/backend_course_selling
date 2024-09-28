@@ -14,6 +14,9 @@ class CourseService {
     async addCourseSection(courseId,addedsectionData){
         try {
             const findCourse = await Course.findById(courseId);
+            if (!findCourse) {
+                throw new Error("Course not found");
+               }
             console.log("course",findCourse)
             findCourse.sections.push(addedsectionData);
             const updateData = await findCourse.save()
@@ -27,9 +30,9 @@ class CourseService {
     async updataCourseSection(courseId,sectionId,data){
         try {
             const findCourse = await Course.findById(courseId);
-            if (!findCourse) {
+                if (!findCourse) {
                 throw new Error("Course not found");
-              }
+               }
               const sectionIndex = findCourse.sections.findIndex(section => section._id.toString() === sectionId);
     
               if (sectionIndex === -1) {
@@ -43,6 +46,38 @@ class CourseService {
 
         } catch (error) {
             
+        }
+    }
+
+    async getAllCourse(page=1,limit=10){
+        try {
+            const pageInt = parseInt(page,10);
+            const limitInt = parseInt(limit,10);
+
+            const offSet = (pageInt-1) * limitInt;
+
+            const allCourses = await Course.find().skip(offSet).limit(limitInt);
+
+            if(!allCourses.length){
+                throw new Error("Course not found");
+            }
+            return allCourses;
+        } catch (error) {
+            console.error("Error fetching courses:", error);
+            throw new Error("Error fetching courses");
+        }
+        
+    }
+    async getCourseById(courseId) {
+        try {
+            const course = await Course.findById(courseId).populate('sections.content'); 
+            if (!course) {
+                throw new Error("Course not found");
+            }
+            return course;
+        } catch (error) {
+            console.error("Error fetching course by ID:", error);
+            throw new Error("Error fetching course");
         }
     }
 }

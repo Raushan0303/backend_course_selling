@@ -49,8 +49,8 @@ export const addCourseSection = async(req,res)=>{
 
 export const updateSection = async(req, res) => {
     try {
-      const { courseId, sectionId } = req.params;  // Retrieve courseId and sectionId from params
-      const sectionData = req.body;  // Retrieve section data from the request body
+      const { courseId, sectionId } = req.params; 
+      const sectionData = req.body; 
       
       const updatedCourse = await courseService.updataCourseSection(courseId, sectionId, sectionData);
       
@@ -69,3 +69,40 @@ export const updateSection = async(req, res) => {
     }
   };
   
+export const getAllCourses = async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;  
+        const courses = await courseService.getAllCourse(page, limit); 
+        res.status(200).json({
+            type: "success",
+            message: "Courses retrieved successfully",
+            data: courses,
+        });
+    } catch (error) {
+        console.error("Error retrieving courses:", error);
+        res.status(500).json({
+            type: "error",
+            message: "Internal Server Error",
+            error: error.message,
+        });
+    }
+};
+
+export const getCourseById = async (req, res) => {
+    const { courseId } = req.params; 
+    try {
+        const course = await courseService.getCourseById(courseId); 
+        res.status(200).json({
+            type: "success",
+            message: "Course retrieved successfully",
+            data: course,
+        });
+    } catch (error) {
+        console.error("Error retrieving course:", error);
+        res.status(500).json({
+            type: "error",
+            message: "Internal Server Error",
+            error: error.message,
+        });
+    }
+};
