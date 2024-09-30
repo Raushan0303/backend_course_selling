@@ -15,7 +15,7 @@ export default function Home() {
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      {name.trim() !== "" && ( // Only show the link if the name is not empty
+      {name.trim() !== "" && ( 
         <Link href={`/room/${name}`}>
           <button>Start Meeting</button>
         </Link>

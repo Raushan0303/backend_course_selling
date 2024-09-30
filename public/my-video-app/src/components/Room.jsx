@@ -6,18 +6,16 @@ import Peer from "peerjs";
 
 let socket;
 
-export default function Room({ roomid }) { // Accept roomid as a prop
+export default function Room({ roomid }) { 
   const videoGridRef = useRef();
   const [myName, setMyName] = useState("");
   const [peer, setPeer] = useState(null);
 
   useEffect(() => {
-    if (!roomid) return; // wait for the roomid to be ready
+    if (!roomid) return; 
 
-    // Initialize socket connection
+   
     socket = io();
-
-    // Initialize PeerJS for video/audio streams
     const myPeer = new Peer(undefined, {
       host: "/",
       port: "3030",
@@ -29,7 +27,6 @@ export default function Room({ roomid }) { // Accept roomid as a prop
       socket.emit("join-room", roomid, id, myName);
     });
 
-    // Get user video/audio stream
     navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true,
@@ -50,7 +47,6 @@ export default function Room({ roomid }) { // Accept roomid as a prop
       });
     });
 
-    // Cleanup on component unmount
     return () => {
       socket.disconnect();
       myPeer.destroy();
