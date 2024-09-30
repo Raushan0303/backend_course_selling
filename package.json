@@ -26,7 +26,13 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-google-oidc": "^0.1.0",
     "passport-jwt": "^4.0.1",
+    "peer": "^1.0.2",
     "resend": "^4.0.0",
+    "socket.io": "^4.8.0",
+    "uuid": "^10.0.0",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/peerjs": "^1.1.0"
   }
 }
