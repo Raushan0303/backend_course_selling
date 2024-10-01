@@ -1,27 +1,26 @@
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 
-// Controller for creating a new meeting
-export const joinMeeting = async (req, res) => {
+
+export const createMeeting = async (req, res) => {
     try {
-        const { name } = req.query;
+        const { name } = req.params;
 
         if (!name) {
             return res.status(400).json({ error: 'Name is required to create a meeting.' });
         }
-
-        // Generate a new meeting ID
         const meetingId = uuidv4();
-        // Redirect to the generated meeting room URL with the name as query parameter
-        res.redirect(`/join/${meetingId}?name=${encodeURIComponent(name)}`);
+
+        const redirectUrl = `/room/${meetingId}?name=${encodeURIComponent(name)}`;
+        res.status(200).json({ redirectUrl });
     } catch (error) {
-        console.error('Error in joinMeeting:', error);
+        console.error('Error in createMeeting:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-// Controller for joining an existing meeting
-export const joinOldMeeting = async (req, res) => {
+
+export const joinExistingMeeting = async (req, res) => {
     try {
         const { meeting_id, name } = req.query;
 
@@ -29,25 +28,28 @@ export const joinOldMeeting = async (req, res) => {
             return res.status(400).json({ error: 'Meeting ID and name are required to join a meeting.' });
         }
 
-        // Redirect to the existing meeting room URL with the name as query parameter
-        res.redirect(`/join/${encodeURIComponent(meeting_id)}?name=${encodeURIComponent(name)}`);
+    
+        res.redirect(`/room/${encodeURIComponent(meeting_id)}?name=${encodeURIComponent(name)}`);
     } catch (error) {
-        console.error('Error in joinOldMeeting:', error);
+        console.error('Error in joinExistingMeeting:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-// Controller to serve the meeting room page
+
 export const joinRoom = async (req, res) => {
     try {
-        const { rooms } = req.params; // Meeting ID
-        const { name } = req.query;   // User's name
+        const { rooms } = req.params; 
+        const { name } = req.query;   
 
-        // Serve the room HTML page, you might want to use a template engine here (e.g., EJS, Handlebars)
-        res.sendFile(path.resolve('./public/room.html'));  // Change path based on your file structure
-
-        // If using a template engine, you can pass the room ID and user name
-        // res.render('room', { roomId: rooms, userName: name });
+      
+        const filePath = path.resolve('./public/room.html');
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error('Error serving room.html:', err);
+                res.status(404).send('Room not found');
+            }
+        });
     } catch (error) {
         console.error('Error in joinRoom:', error);
         res.status(500).send('Internal Server Error');

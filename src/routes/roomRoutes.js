@@ -1,15 +1,15 @@
 import express from 'express';
-import { joinMeeting, joinOldMeeting, joinRoom } from '../controllers/room-controller.js';
+import { createMeeting, joinExistingMeeting, joinRoom } from '../controllers/room-controller.js';
 
 const router = express.Router();
 
-// Route to create a new meeting (host)
-router.get('/join', joinMeeting);
 
-// Route to join an existing meeting
-router.get('/join-old-meeting', joinOldMeeting);
+router.post('/create-meeting/:name', createMeeting);
 
-// Route to load the room
-router.get('/join/:rooms', joinRoom);
+
+router.get('/join-meeting', joinExistingMeeting);
+
+
+router.get('/room/:rooms', joinRoom);
 
 export default router;
