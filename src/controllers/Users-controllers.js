@@ -142,31 +142,30 @@ export const googleAuth = passport.authenticate('google', {
   scope: ['profile', 'email']  
 });
 
-
-
 export const googleAuthCallback = (req, res, next) => {
-  passport.authenticate('google', async (err, user) => {
+  passport.authenticate('google', { session: false }, (err, user) => {
     if (err || !user) {
-      console.log('Error or no user:', err, user); 
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication failed',
-      });
+      return res.status(400).json({ message: 'Something went wrong' });
     }
-    const payload = {
-      id: user._id,  
-      name: user.name,
-      email: user.email,
-    };
 
-    const token = jwt.sign(payload, JWT_SECRET, { 
-      expiresIn: '1h'  
-    });
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({
-      success: true,
-      token, 
-      message: 'User authenticated successfully',
-    });
+    res.redirect(`/auth/success?token=${token}`);
   })(req, res, next);
+};
+
+export const getUserDetails = async (req, res) => {
+  try {
+    console.log('Getting user details for user ID:', req.user.id); // Add this line
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      console.log('User not found'); // Add this line
+      return res.status(404).json({ message: "User not found" });
+    }
+    console.log('User details found:', user); // Add this line
+    res.json(user);
+  } catch (error) {
+    console.error('Error in getUserDetails:', error);
+    res.status(500).json({ message: "Server error" });
+  }
 };

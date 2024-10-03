@@ -14,13 +14,17 @@ import path from 'path';
 import cors from 'cors';
 import mediasoup from 'mediasoup';
 import { PeerServer } from 'peer';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 
 // Middleware setup
 app.use(cors({
-    origin: '*', 
+    origin: 'http://localhost:3000', // or your frontend URL
     credentials: true 
 }));
 
@@ -192,9 +196,24 @@ io.on("connection", (socket) => {
     });
 });
 
+// Use PORT from environment variables or default to 3000
+const PORT = process.env.PORT || 3000;
+
 // Start the server and connect to MongoDB
-server.listen(3000, async () => {
-    console.log(`Server running on port 3000`);
-    await connect();
-    console.log('MongoDB connected');
+server.listen(PORT, async () => {
+    try {
+        console.log(`Server running on port ${PORT}`);
+        await connect();
+        console.log('MongoDB connected');
+    } catch (error) {
+        console.error('Failed to start the server:', error);
+        process.exit(1);
+    }
+}).on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Please choose a different port or close the application using this port.`);
+    } else {
+        console.error('An error occurred while starting the server:', error);
+    }
+    process.exit(1);
 });
