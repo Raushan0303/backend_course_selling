@@ -40,8 +40,22 @@ const contentSchema = new Schema({
      enum: ['video', 'document'],
      required: true
  },  // 'video' or 'document'
-  video: videoSchema,  
-  document: documentSchema,
+  title: {
+    type: String,
+    required: true
+  },
+  url: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: Number,
+    required: function() { return this.contentType === 'video'; }
+  },
+  fileType: {
+    type: String,
+    required: function() { return this.contentType === 'document'; }
+  }
 });
 
 // Schema for sections in a course
@@ -60,7 +74,8 @@ const courseSchema = new Schema({
     required: true
  },  
   description: {
-    type: String
+    type: String,
+    required: true
  },  
   price:{
     type: String,
