@@ -4,63 +4,82 @@ import jwt from 'jsonwebtoken';
 import { z } from "zod";
 import { JWT_SECRET } from "../config/config.js";
 import dotenv from 'dotenv';
-import { generateOtp } from "../utils/otp.utils.js";
+// import { generateOtp } from "../utils/otp.utils.js";
+import Instructor from "../models/instructor.js";
 import { sendOtp } from "../utils/send-otp.js";
 import passport from "passport";
+import { generateSubdomain } from "../utils/subdomain.utils.js";
 dotenv.config();
 
-
 export const SignUp = async (req, res) => {
-    
-    try {
-        const requiredBody = z.object({
-            email: z.string().min(8).max(30).email(),
-            name: z.string().min(3).max(30),
-            password: z.string().min(5).max(30),
-            role: z.enum(['Admin','User']),
-        })
+  try {
+      const requiredBody = z.object({
+          email: z.string().min(8).max(30).email(),
+          name: z.string().min(3).max(30),
+          password: z.string().min(5).max(30),
+          role: z.enum(['Admin', 'Instructor', 'User']),  
+          bio: z.string().optional(), 
+          profilePicture: z.string().optional(), 
+      });
 
-        const parseDataWithSuccess = requiredBody.safeParse(req.body);
-        if(!parseDataWithSuccess.success){
-            res.json({
-                message: "Incorrect Format"
-            })
-            return
-        }
+      const parseDataWithSuccess = requiredBody.safeParse(req.body);
+      if (!parseDataWithSuccess.success) {
+          return res.status(400).json({ message: "Incorrect Format" });
+      }
 
-        const { name, email, password, role } = req.body;
-        const findUserExist = await User.findOne({ email: email });
-        const hashedPassword = await bcrypt.hash(password, 10);
+      const { name, email, password, role, bio, profilePicture } = req.body;
+      
+      const findUserExist = await User.findOne({ email: email });
+      if (findUserExist) {
+          return res.status(409).json({
+              message: "Email already exists, try to use another email",
+              success: false,
+          });
+      }
 
-        if (findUserExist) {
-            return res.status(409).json({ 
-                message: "Email already exists, try to use another email",
-                success: false,
-            });
-        } else {
-            const response = await User.create({
-                name: name,
-                email: email,
-                password: hashedPassword,
-                role: role, 
-            });
-            await sendOtp(email);
-            return res.status(201).json({
-                message: "You are signed up",
-                data: response,
-                success: true,
-                err: {},
-            });
-        }
-    } catch (error) {
-        console.error(error); 
-        return res.status(500).json({
-            message: "Internal server error",
-            success: false,
-            err: error.message, 
-        });
-    }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      let subdomain = null;
+
+      if (role === 'Instructor') {
+          subdomain = generateSubdomain(name);  
+      }
+
+   
+      const newUser = await User.create({
+          name,
+          email,
+          password: hashedPassword,
+          role,
+          subdomain,
+      });
+
+     
+      if (role === 'Instructor') {
+          await Instructor.create({
+              user: newUser._id, 
+              bio: bio || '', 
+              profilePicture: profilePicture || '', 
+          });
+      }
+
+      await sendOtp(email); 
+
+      return res.status(201).json({
+          message: "You are signed up",
+          data: newUser,
+          success: true,
+          err: {},
+      });
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          message: "Internal server error",
+          success: false,
+          err: error.message,
+      });
+  }
 };
+
 
 export const signin = async (req, res) => {
     try {
@@ -71,11 +90,9 @@ export const signin = async (req, res) => {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
   
-      //console.log("user data", userExist.id);
       
       const isMatch = await bcrypt.compare(password, userExist.password);
-      //console.log("ismatch", isMatch);
-      
+     
       if (!isMatch) {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
@@ -83,7 +100,6 @@ export const signin = async (req, res) => {
       const payload = { id: userExist.id };
 
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-      //console.log("token", token);
   
       res.status(200).json({
         message: 'Login successful',
@@ -137,7 +153,7 @@ export const signin = async (req, res) => {
       });
     }
   };
-  // Trigger Google OAuth flow
+
 export const googleAuth = passport.authenticate('google', {
   scope: ['profile', 'email']  
 });
@@ -156,13 +172,13 @@ export const googleAuthCallback = (req, res, next) => {
 
 export const getUserDetails = async (req, res) => {
   try {
-    console.log('Getting user details for user ID:', req.user.id); // Add this line
+    console.log('Getting user details for user ID:', req.user.id);
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      console.log('User not found'); // Add this line
+      console.log('User not found'); 
       return res.status(404).json({ message: "User not found" });
     }
-    console.log('User details found:', user); // Add this line
+    console.log('User details found:', user); 
     res.json(user);
   } catch (error) {
     console.error('Error in getUserDetails:', error);

@@ -4,26 +4,24 @@ import nodemailer from 'nodemailer';
 
 export const sendEmail = async (email, otp) => {
   try {
-    // Step 1: Create transporter with Gmail SMTP settings
+    
     let transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'nextjsraushan@gmail.com',  // Your Gmail address
-        pass: 'slid palj fvuq uttq',     // App password or Gmail password
+        user: 'nextjsraushan@gmail.com',  
+        pass: 'slid palj fvuq uttq',     
       },
     });
 
-    // Step 2: Define email options
     let mailOptions = {
-      from: '"EduMerge" <nextjsraushan@gmail.com>',  // Sender address
-      to: email,                                       // List of receivers
-      subject: 'Your OTP Code',                        // Subject line
-      html: `This is your OTP code: ${otp}`,            // HTML body content
+      from: '"EduMerge" <nextjsraushan@gmail.com>', 
+      to: email,                                      
+      subject: 'Your OTP Code',                        
+      html: `This is your OTP code: ${otp}`,      
     };
 
-    // Step 3: Send email
     const info = await transporter.sendMail(mailOptions);
-    // console.log('Email sent:', info.messageId);
+
   } catch (error) {
     console.error('Error sending OTP email:', error.message);
   }

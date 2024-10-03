@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         unique: true,
         sparse: true, 
-      },
+    },
     name: {
         type: String,
         required: true
@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['Admin', 'User','Instructor'],
+        enum: ['Admin', 'User', 'Instructor'],
         default: 'User'
     },
     isVerified: {
@@ -34,7 +34,16 @@ const userSchema = new mongoose.Schema({
     },
     otpExpires: {
         type: Date  
-    }
+    },
+    subdomain: {
+        type: String,   
+        required: function() {
+            return this.role === 'Instructor';  // Subdomain is required only for Instructor
+        },
+        unique: true,  // Subdomain should be unique across instructors
+        sparse: true   // Allow null or undefined for other roles
+    },
+    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
