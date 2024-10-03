@@ -71,10 +71,10 @@ export const signin = async (req, res) => {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
   
-      console.log("user data", userExist.id);
+      //console.log("user data", userExist.id);
       
       const isMatch = await bcrypt.compare(password, userExist.password);
-      console.log("ismatch", isMatch);
+      //console.log("ismatch", isMatch);
       
       if (!isMatch) {
         return res.status(401).json({ message: 'Invalid email or password' });
@@ -83,7 +83,7 @@ export const signin = async (req, res) => {
       const payload = { id: userExist.id };
 
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-      console.log("token", token);
+      //console.log("token", token);
   
       res.status(200).json({
         message: 'Login successful',

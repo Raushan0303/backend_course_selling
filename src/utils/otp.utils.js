@@ -15,15 +15,15 @@ export const sendEmail = async (email, otp) => {
 
     // Step 2: Define email options
     let mailOptions = {
-      from: '"Your App Name" <nextjsraushan@gmail.com>',  // Sender address
+      from: '"EduMerge" <nextjsraushan@gmail.com>',  // Sender address
       to: email,                                       // List of receivers
       subject: 'Your OTP Code',                        // Subject line
-      html: `<h1>Your OTP is: ${otp}</h1>`,            // HTML body content
+      html: `This is your OTP code: ${otp}`,            // HTML body content
     };
 
     // Step 3: Send email
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.messageId);
+    // console.log('Email sent:', info.messageId);
   } catch (error) {
     console.error('Error sending OTP email:', error.message);
   }

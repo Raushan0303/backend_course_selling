@@ -18,7 +18,7 @@ export default function Dashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/signin');
+      router.push('/');
     } else {
       fetchUserData(token);
     }

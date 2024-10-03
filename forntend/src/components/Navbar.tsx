@@ -34,7 +34,7 @@ export default function Navbar({ userName, userRole, onLogout }: NavbarProps) {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/dashboard" className="text-gray-800 dark:text-white text-lg font-semibold">
-              Logo
+              EduMerge
             </Link>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
