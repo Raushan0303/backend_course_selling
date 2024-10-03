@@ -1,169 +1,173 @@
-"use client";
+"use client"
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import io from "socket.io-client";
 import Peer from "peerjs";
 
-let socket;
+const SERVER_URL = "http://localhost:3000";
+const PEER_SERVER_HOST = "localhost";
+const PEER_SERVER_PORT = 3002;
 
-export default function Room({ roomid }) {
-  const videoGridRef = useRef();
-  const [myName, setMyName] = useState("");
-  const [peer, setPeer] = useState(null);
+export default function Room({ roomId }) {
+  const [myStream, setMyStream] = useState(null);
+  const [peers, setPeers] = useState({});
   const [messages, setMessages] = useState([]);
   const [isMuted, setIsMuted] = useState(false);
-  const [isVideoStopped, setIsVideoStopped] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [username, setUsername] = useState("");
+  const [meetingLink, setMeetingLink] = useState("");
 
-  const toggleMute = () => {
-    setIsMuted((prev) => !prev);
-  
-  };
+  const socketRef = useRef();
+  const peerRef = useRef();
+  const videoGridRef = useRef();
 
-  const toggleVideo = () => {
-    setIsVideoStopped((prev) => !prev);
-    
-  };
+  const addVideoStream = useCallback((userId, stream) => {
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    video.id = `video-${userId}`;
+    video.addEventListener("loadedmetadata", () => video.play());
+    videoGridRef.current?.appendChild(video);
+  }, []);
+
+  const removeVideoStream = useCallback((userId) => {
+    const video = document.getElementById(`video-${userId}`);
+    if (video) video.remove();
+  }, []);
+
+  const connectToNewUser = useCallback((userId, stream) => {
+    const call = peerRef.current.call(userId, stream);
+    call.on("stream", (userVideoStream) => {
+      addVideoStream(userId, userVideoStream);
+    });
+    call.on("close", () => removeVideoStream(userId));
+    setPeers((prevPeers) => ({ ...prevPeers, [userId]: call }));
+  }, [addVideoStream, removeVideoStream]);
 
   useEffect(() => {
-    if (!roomid) return;
+    const initializeRoom = async () => {
+      try {
+        const username = prompt("Enter your name") || "Guest";
+        setUsername(username);
 
-    const username = prompt("Enter your name");
-    setMyName(username || "Guest");
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        setMyStream(stream);
+        addVideoStream("me", stream);
 
-    socket = io("http://localhost:3000");
+        socketRef.current = io(SERVER_URL);
+        peerRef.current = new Peer(undefined, {
+          host: PEER_SERVER_HOST,
+          port: PEER_SERVER_PORT,
+          path: "/peerjs",
+        });
 
-    const myPeer = new Peer(undefined, {
-      host: "localhost",
-      port: "3002",
-      path: "/peerjs",
-    });
+        peerRef.current.on("open", (id) => {
+          socketRef.current.emit("join-room", roomId, id, username);
+        });
 
-    setPeer(myPeer);
-
-    myPeer.on("open", (id) => {
-      socket.emit("join-room", roomid, id, username);
-    });
-
-    navigator.mediaDevices
-      .getUserMedia({
-        video: true,
-        audio: true,
-      })
-      .then((stream) => {
-        const videoElement = document.createElement("video");
-        videoElement.muted = true;
-        addVideoStream(videoElement, stream);
-
-        myPeer.on("call", (call) => {
+        peerRef.current.on("call", (call) => {
           call.answer(stream);
-          const video = document.createElement("video");
           call.on("stream", (userVideoStream) => {
-            addVideoStream(video, userVideoStream);
+            addVideoStream(call.peer, userVideoStream);
           });
         });
 
-        socket.on("user-connected", (userId, name) => {
+        socketRef.current.on("user-connected", (userId) => {
           connectToNewUser(userId, stream);
         });
-      });
 
-    socket.on("user-disconnected", (userId) => {
-      removeVideoStream(userId);
-    });
+        socketRef.current.on("user-disconnected", (userId) => {
+          if (peers[userId]) peers[userId].close();
+          removeVideoStream(userId);
+        });
+
+        socketRef.current.on("create-message", (message) => {
+          setMessages((prevMessages) => [...prevMessages, message]);
+        });
+
+        setMeetingLink(`${window.location.origin}/room/${roomId}`);
+      } catch (error) {
+        console.error("Error setting up the room:", error);
+      }
+    };
+
+    initializeRoom();
 
     return () => {
-      socket.disconnect();
-      myPeer.destroy();
+      myStream?.getTracks().forEach((track) => track.stop());
+      socketRef.current?.disconnect();
+      peerRef.current?.destroy();
     };
-  }, [roomid]);
+  }, [roomId, addVideoStream, removeVideoStream, connectToNewUser, peers]);
 
-  const addVideoStream = (video, stream) => {
-    video.srcObject = stream;
-    video.addEventListener("loadedmetadata", () => {
-      video.play();
-    });
-    videoGridRef.current.append(video);
-  };
-
-  const removeVideoStream = (userId) => {
-    const videoElement = document.getElementById(userId);
-    if (videoElement) {
-      videoElement.remove();
+  const toggleAudio = () => {
+    if (myStream) {
+      const audioTrack = myStream.getAudioTracks()[0];
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsMuted(!audioTrack.enabled);
     }
   };
 
-  const connectToNewUser = (userId, stream) => {
-    const call = peer.call(userId, stream);
-    const video = document.createElement("video");
-    video.id = userId; 
-    call.on("stream", (userVideoStream) => {
-      addVideoStream(video, userVideoStream);
-    });
+  const toggleVideo = () => {
+    if (myStream) {
+      const videoTrack = myStream.getVideoTracks()[0];
+      videoTrack.enabled = !videoTrack.enabled;
+      setIsVideoOff(!videoTrack.enabled);
+    }
   };
 
   const sendMessage = (message) => {
-    socket.emit("messagesend", message);
-    setMessages((prevMessages) => [...prevMessages, message]);
+    socketRef.current.emit("send-message", roomId, { user: username, content: message });
+    setMessages((prevMessages) => [...prevMessages, { user: "You", content: message }]);
   };
 
-  useEffect(() => {
-    socket.on("createMessage", (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
-  }, []);
+  const copyMeetingLink = () => {
+    navigator.clipboard.writeText(meetingLink);
+    alert("Meeting link copied to clipboard!");
+  };
 
   return (
-    <div className="flex justify-center items-stretch h-screen bg-gray-100">
-      <div className="flex w-11/12 border rounded-lg overflow-hidden shadow-lg">
-        {/* Video Section */}
-        <div className="flex flex-col w-3/4 p-4 bg-white">
-          <div className="flex-1 flex justify-center items-center border border-gray-300 rounded-lg mb-2 bg-gray-200" ref={videoGridRef}>
-            <h2 className="text-gray-500">Video Area</h2>
-          </div>
-          <div className="flex justify-around mb-2">
-            <button
-              className={`bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-200 ${isMuted ? 'bg-red-500' : ''}`}
-              onClick={toggleMute}
-            >
-              {isMuted ? 'Unmute' : 'Mute'}
-            </button>
-            <button
-              className={`bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-200 ${isVideoStopped ? 'bg-red-500' : ''}`}
-              onClick={toggleVideo}
-            >
-              {isVideoStopped ? 'Start Video' : 'Stop Video'}
-            </button>
-            <button className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-200">Chat</button>
-          </div>
+    <div className="flex h-screen bg-gray-100">
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 p-4" ref={videoGridRef}>
+          {/* Video streams will be added here */}
         </div>
-
-        {/* Chat Section */}
-        <div className="flex flex-col w-1/4 border-l border-gray-300 bg-white">
-          <div className="p-2 border-b bg-gray-200">
-            <h6 className="font-semibold">Chat Area</h6>
+        <div className="p-4 bg-white shadow-md">
+          <button onClick={toggleAudio} className={`px-4 py-2 rounded ${isMuted ? 'bg-red-500' : 'bg-blue-500'} text-white mr-2`}>
+            {isMuted ? 'Unmute' : 'Mute'}
+          </button>
+          <button onClick={toggleVideo} className={`px-4 py-2 rounded ${isVideoOff ? 'bg-red-500' : 'bg-blue-500'} text-white mr-2`}>
+            {isVideoOff ? 'Start Video' : 'Stop Video'}
+          </button>
+          <button onClick={copyMeetingLink} className="px-4 py-2 rounded bg-green-500 text-white">
+            Copy Meeting Link
+          </button>
+        </div>
+      </div>
+      <div className="w-1/4 bg-white p-4 shadow-md">
+        <h2 className="text-xl font-bold mb-4">Chat</h2>
+        <div className="h-full flex flex-col">
+          <div className="flex-1 overflow-y-auto mb-4">
+            {messages.map((msg, index) => (
+              <div key={index} className="mb-2">
+                <span className="font-bold">{msg.user}: </span>
+                <span>{msg.content}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex-1 overflow-y-auto p-2">
-            <ul className="space-y-1">
-              {messages.map((message, index) => (
-                <li key={index} className="bg-indigo-200 p-2 rounded">
-                  {message}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="p-2">
-            <input
-              type="text"
-              placeholder="Type message here..."
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && e.target.value.trim()) {
-                  sendMessage(e.target.value.trim());
-                  e.target.value = "";
-                }
-              }}
-              className="border border-gray-300 rounded p-2 w-full"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Type a message..."
+            className="w-full px-2 py-1 border rounded"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && e.target.value.trim()) {
+                sendMessage(e.target.value.trim());
+                e.target.value = '';
+              }
+            }}
+          />
         </div>
       </div>
     </div>

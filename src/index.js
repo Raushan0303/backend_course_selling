@@ -7,6 +7,7 @@ import './config/passport-google.js';
 import userRoutes from './routes/userRouter.js';
 import courseRoute from './routes/courseRouter.js';
 import roomRoutes from './routes/roomRoutes.js';
+import instructorRoutes from "./routes/instructorRoutes.js"; 
 import { Secret_key } from './config/config.js';
 import http from "http";
 import { Server } from 'socket.io';
@@ -16,15 +17,15 @@ import mediasoup from 'mediasoup';
 import { PeerServer } from 'peer';
 import dotenv from 'dotenv';
 
-// Load environment variables
+
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 
-// Middleware setup
+
 app.use(cors({
-    origin: 'http://localhost:3000', // or your frontend URL
+    origin: 'http://localhost:3000', 
     credentials: true 
 }));
 
@@ -62,6 +63,8 @@ app.use(passport.session());
 app.use('/api/v1', userRoutes);
 app.use('/api/v1', courseRoute);
 app.use('/api/v1', roomRoutes);
+app.use("/", instructorRoutes);
+
 
 // 404 route handler
 app.get('*', (req, res) => {
@@ -196,10 +199,10 @@ io.on("connection", (socket) => {
     });
 });
 
-// Use PORT from environment variables or default to 3000
+
 const PORT = process.env.PORT || 3000;
 
-// Start the server and connect to MongoDB
+
 server.listen(PORT, async () => {
     try {
         console.log(`Server running on port ${PORT}`);

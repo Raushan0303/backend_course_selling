@@ -27,6 +27,20 @@ export default function Home() {
             alert('Error creating meeting: ' + error.message);
         }
     };
+    const joinRoom = async (e) => {
+        e.preventDefault();
+        try {
+          const response = await fetch(`/api/rooms/join/${roomId}`, { method: 'POST' });
+          const data = await response.json();
+          if (data.success) {
+            navigate(`/room/${roomId}`);
+          } else {
+            alert('Room not found');
+          }
+        } catch (error) {
+          console.error('Error joining room:', error);
+        }
+      };
      
   
   
