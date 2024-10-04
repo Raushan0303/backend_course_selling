@@ -1,17 +1,17 @@
 import express from "express";
-import { create, addCourseSection, updateSection, getAllCourses, getCourseById, deleteCourse, deleteCourseSection, updateCourse } from "../controllers/course-controller.js";
+ import { create, addCourseSection, updateSection, getAllCourses, getCourseById, deleteCourse, deleteCourseSection, updateCourse, getSectionContent, updateSectionProgress } from "../controllers/course-controller.js";
 import { authenticateToken } from "../middleware/auth.js";
-import {
-    create,
-    addCourseSection,
-    updateSection,
-    getAllCourses,
-    getCourseById,
-    deleteCourse,
-    deleteCourseSection,
-    getSectionContent, 
-    updateSectionProgress 
-} from "../controllers/course-controller.js";
+// import {
+//     create,
+//     addCourseSection,
+//     updateSection,
+//     getAllCourses,
+//     getCourseById,
+//     deleteCourse,
+//     deleteCourseSection,
+//     getSectionContent, 
+//     updateSectionProgress 
+// } from "../controllers/course-controller.js";
 
 const router = express.Router();
 

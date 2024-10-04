@@ -69,13 +69,13 @@ export const SignUp = async (req, res) => {
           }
       }
 
-      const newUser = new User({
-          name,
-          email,
-          password: hashedPassword,
-          role,
-          subdomain,
-      });
+      // const newUser = new User({
+      //     name,
+      //     email,
+      //     password: hashedPassword,
+      //     role,
+      //     subdomain,
+      // });
 
     // If the user is an Instructor, create the instructor details
     if (role === 'Instructor') {

@@ -107,12 +107,12 @@ const courseSchema = new Schema({
     type: Schema.Types.ObjectId, 
     ref: 'User',
     required: true 
-  }
+  },
   createdBy: {
     type: Schema.Types.ObjectId, 
     ref: 'User',
     required: true 
- }  // Reference to the course creator (optional)
+  }  // Reference to the course creator
 });
 
 const Course = mongoose.model('Course', courseSchema);
