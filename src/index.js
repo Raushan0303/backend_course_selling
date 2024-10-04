@@ -26,7 +26,7 @@ const server = http.createServer(app);
 
 
 app.use(cors({
-    origin: 'http://localhost:3000', 
+    origin: 'http://localhost:3001', 
     credentials: true 
 }));
 
@@ -202,7 +202,7 @@ io.on("connection", (socket) => {
 });
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 
 server.listen(PORT, async () => {

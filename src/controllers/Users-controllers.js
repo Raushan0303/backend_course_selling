@@ -13,70 +13,80 @@ dotenv.config();
 
 export const SignUp = async (req, res) => {
   try {
-      const requiredBody = z.object({
-          email: z.string().min(8).max(30).email(),
-          name: z.string().min(3).max(30),
-          password: z.string().min(5).max(30),
-          role: z.enum(['Admin', 'Instructor', 'User']),  
-          bio: z.string().optional(), 
-          profilePicture: z.string().optional(), 
+    const requiredBody = z.object({
+      email: z.string().min(8).max(30).email(),
+      name: z.string().min(3).max(30),
+      password: z.string().min(5).max(30),
+      role: z.enum(['Admin', 'Instructor', 'User']),
+      bio: z.string().optional(),
+      profilePicture: z.string().optional(),
+    });
+
+    const parseDataWithSuccess = requiredBody.safeParse(req.body);
+    if (!parseDataWithSuccess.success) {
+      return res.status(400).json({ message: "Incorrect Format" });
+    }
+
+    const { name, email, password, role, bio, profilePicture } = req.body;
+
+    // Check if the user already exists
+    const findUserExist = await User.findOne({ email: email });
+    if (findUserExist) {
+      return res.status(409).json({
+        message: "Email already exists, try to use another email",
+        success: false,
       });
+    }
 
-      const parseDataWithSuccess = requiredBody.safeParse(req.body);
-      if (!parseDataWithSuccess.success) {
-          return res.status(400).json({ message: "Incorrect Format" });
-      }
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    let subdomain = null;
 
-      const { name, email, password, role, bio, profilePicture } = req.body;
-      
-      const findUserExist = await User.findOne({ email: email });
-      if (findUserExist) {
-          return res.status(409).json({
-              message: "Email already exists, try to use another email",
-              success: false,
-          });
-      }
+    // If the user is an Instructor, generate a subdomain
+    if (role === 'Instructor') {
+      subdomain = generateSubdomain(name);  
+    }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      let subdomain = null;
+    // Create the new user
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      subdomain,
+    });
 
-      if (role === 'Instructor') {
-          subdomain = generateSubdomain(name);  
-      }
-
-   
-      const newUser = await User.create({
-          name,
-          email,
-          password: hashedPassword,
-          role,
-          subdomain,
+    // If the user is an Instructor, create the instructor details
+    if (role === 'Instructor') {
+      await Instructor.create({
+        user: newUser._id,
+        bio: bio || '',
+        profilePicture: profilePicture || '',
       });
+    }
 
-     
-      if (role === 'Instructor') {
-          await Instructor.create({
-              user: newUser._id, 
-              bio: bio || '', 
-              profilePicture: profilePicture || '', 
-          });
-      }
+    // Send OTP (Assuming this is for verification)
+    await sendOtp(email);
 
-      await sendOtp(email); 
-
-      return res.status(201).json({
-          message: "You are signed up",
-          data: newUser,
-          success: true,
-          err: {},
-      });
+    // Include subdomain in the response if the user is an Instructor
+    return res.status(201).json({
+      message: "You are signed up",
+      data: {
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        subdomain: newUser.subdomain || null,  // Include subdomain for instructors
+      },
+      success: true,
+      err: {},
+    });
   } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-          message: "Internal server error",
-          success: false,
-          err: error.message,
-      });
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false,
+      err: error.message,
+    });
   }
 };
 

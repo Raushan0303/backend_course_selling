@@ -2,36 +2,36 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 
-const videoSchema = new Schema({
-  title: {
-    type: String,
-    required: true 
- },
-  url: {
-    type: String,
-    required: true 
- },  
-  duration: {
-    type: Number,
-    required: true 
- },
-});
+// const videoSchema = new Schema({
+//   title: {
+//     type: String,
+//     required: true 
+//  },
+//   url: {
+//     type: String,
+//     required: true 
+//  },  
+//   duration: {
+//     type: Number,
+//     required: true 
+//  },
+// });
 
 
-const documentSchema = new Schema({
-  title: {
-     type: String,
-     required: true
-    },
-  url: {
-     type: String,
-    required: true 
- },  
-  fileType: {
-     type: String,
-     required: true
-     },  // File type, e.g., 'pdf', 'docx'
-});
+// const documentSchema = new Schema({
+//   title: {
+//      type: String,
+//      required: true
+//     },
+//   url: {
+//      type: String,
+//     required: true 
+//  },  
+//   fileType: {
+//      type: String,
+//      required: true
+//      },  // File type, e.g., 'pdf', 'docx'
+// });
 
 // Schema for course content (either a video or document)
 const contentSchema = new Schema({
@@ -39,7 +39,7 @@ const contentSchema = new Schema({
      type: String,
      enum: ['video', 'document'],
      required: true
- },  // 'video' or 'document'
+ },
   title: {
     type: String,
     required: true
@@ -58,7 +58,7 @@ const contentSchema = new Schema({
   }
 });
 
-// Schema for sections in a course
+
 const sectionSchema = new Schema({
   sectionTitle: {
      type: String,
@@ -74,7 +74,7 @@ const sectionSchema = new Schema({
       },
       currentContentIndex: {
         type: Number,
-        default: 0, // Track which part of the section they are on
+        default: 0, 
       },
       startedAt: {
         type: Date,
@@ -88,7 +88,7 @@ const sectionSchema = new Schema({
   ]
 });
 
-// Main Course Schema
+
 const courseSchema = new Schema({
   title: {
     type: String,
@@ -103,11 +103,11 @@ const courseSchema = new Schema({
     required: true
   },
   sections: [sectionSchema],  
-//   createdBy: {
-//     type: Schema.Types.ObjectId, 
-//     ref: 'User',
-//     required: true 
-//  }  // Reference to the course creator (optional)
+  createdBy: {
+    type: Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true 
+ }  // Reference to the course creator (optional)
 });
 
 const Course = mongoose.model('Course', courseSchema);

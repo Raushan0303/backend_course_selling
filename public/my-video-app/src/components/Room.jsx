@@ -119,7 +119,7 @@ export default function Room({ roomId }) {
   };
 
   const sendMessage = (message) => {
-    socketRef.current.emit("send-message", roomId, { user: username, content: message });
+    socketRef.current?.emit("send-message", roomId, { user: username, content: message });
     setMessages((prevMessages) => [...prevMessages, { user: "You", content: message }]);
   };
 

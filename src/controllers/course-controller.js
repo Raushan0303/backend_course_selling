@@ -155,3 +155,48 @@ export const deleteCourseSection = async (req, res) => {
         });
     }
 };
+export const getSectionContent = async (req, res) => {
+    try {
+        const { courseId, sectionId } = req.params;
+        const userId = req.user.id;  
+
+        const sectionContent = await courseService.getSectionContent(courseId, sectionId, userId);
+
+        res.status(200).json({
+            type: "success",
+            message: "Section content retrieved successfully",
+            data: sectionContent,
+        });
+    } catch (error) {
+        console.error("Error retrieving section content:", error);
+        res.status(500).json({
+            type: "error",
+            message: "Internal Server Error",
+            error: error.message,
+        });
+    }
+};
+
+// Update user progress in section
+export const updateSectionProgress = async (req, res) => {
+    try {
+        const { courseId, sectionId } = req.params;
+        const { contentIndex } = req.body;
+        const userId = req.user.id; 
+
+        const updatedSection = await courseService.updateSectionProgress(courseId, sectionId, userId, contentIndex);
+
+        res.status(200).json({
+            type: "success",
+            message: "Section progress updated successfully",
+            data: updatedSection,
+        });
+    } catch (error) {
+        console.error("Error updating section progress:", error);
+        res.status(500).json({
+            type: "error",
+            message: "Internal Server Error",
+            error: error.message,
+        });
+    }
+};
