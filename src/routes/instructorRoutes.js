@@ -3,12 +3,10 @@ import { getInstructorSpace } from "../controllers/instructor-controller.js";
 
 const router = express.Router();
 
-
 router.use((req, res, next) => {
     const host = req.hostname; 
-    console.log("host",host)
     const subdomain = host.split('.')[0]; 
-    console.log("subdomain",subdomain)
+    console.log("subdomain", subdomain);
 
     if (subdomain && subdomain !== 'localhost') {
         req.subdomain = subdomain; 
@@ -18,18 +16,17 @@ router.use((req, res, next) => {
 
 router.use("/", async (req, res, next) => {
     const subdomain = req.subdomain;
-    console.log("subdmoan form /",subdomain)
-
     if (subdomain) {
         try {
             const instructor = await getInstructorSpace(subdomain, req, res, next);
-            console.log("instructor",instructor)
-            
+            console.log("instructor", instructor);
+
             if (!instructor) {
                 return res.status(404).json({ message: "Instructor not found" });
             }
 
             res.status(200).json({
+                subdomain: subdomain,  // Including the subdomain in the response
                 instructorName: instructor.name,
                 courses: instructor.courses,
                 details: instructor.details,

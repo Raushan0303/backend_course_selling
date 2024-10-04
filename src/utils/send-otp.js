@@ -1,4 +1,4 @@
-// import { use } from "passport";
+
 import User from "../models/users.js";
 import { sendEmail } from "./otp.utils.js";
 import { generateOtp } from "./otp.utils.js";

@@ -2,36 +2,36 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 
-const videoSchema = new Schema({
-  title: {
-    type: String,
-    required: true 
- },
-  url: {
-    type: String,
-    required: true 
- },  
-  duration: {
-    type: Number,
-    required: true 
- },
-});
+// const videoSchema = new Schema({
+//   title: {
+//     type: String,
+//     required: true 
+//  },
+//   url: {
+//     type: String,
+//     required: true 
+//  },  
+//   duration: {
+//     type: Number,
+//     required: true 
+//  },
+// });
 
 
-const documentSchema = new Schema({
-  title: {
-     type: String,
-     required: true
-    },
-  url: {
-     type: String,
-    required: true 
- },  
-  fileType: {
-     type: String,
-     required: true
-     },  // File type, e.g., 'pdf', 'docx'
-});
+// const documentSchema = new Schema({
+//   title: {
+//      type: String,
+//      required: true
+//     },
+//   url: {
+//      type: String,
+//     required: true 
+//  },  
+//   fileType: {
+//      type: String,
+//      required: true
+//      },  // File type, e.g., 'pdf', 'docx'
+// });
 
 // Schema for course content (either a video or document)
 const contentSchema = new Schema({
@@ -39,7 +39,7 @@ const contentSchema = new Schema({
      type: String,
      enum: ['video', 'document'],
      required: true
- },  // 'video' or 'document'
+ },
   title: {
     type: String,
     required: true
@@ -58,16 +58,37 @@ const contentSchema = new Schema({
   }
 });
 
-// Schema for sections in a course
+
 const sectionSchema = new Schema({
   sectionTitle: {
      type: String,
      required: true
-    },  
-  content: [contentSchema], 
+  },  
+  content: [contentSchema],
+  interactionHistory: [
+    {
+      userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      currentContentIndex: {
+        type: Number,
+        default: 0, 
+      },
+      startedAt: {
+        type: Date,
+        default: Date.now
+      },
+      lastAccessedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ]
 });
 
-// Main Course Schema
+
 const courseSchema = new Schema({
   title: {
     type: String,
@@ -87,6 +108,11 @@ const courseSchema = new Schema({
     ref: 'User',
     required: true 
   }
+  createdBy: {
+    type: Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true 
+ }  // Reference to the course creator (optional)
 });
 
 const Course = mongoose.model('Course', courseSchema);
