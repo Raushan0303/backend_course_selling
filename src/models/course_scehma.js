@@ -49,8 +49,29 @@ const sectionSchema = new Schema({
   sectionTitle: {
      type: String,
      required: true
-    },  
-  content: [contentSchema], 
+  },  
+  content: [contentSchema],
+  interactionHistory: [
+    {
+      userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      currentContentIndex: {
+        type: Number,
+        default: 0, // Track which part of the section they are on
+      },
+      startedAt: {
+        type: Date,
+        default: Date.now
+      },
+      lastAccessedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ]
 });
 
 // Main Course Schema

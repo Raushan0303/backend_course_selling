@@ -6,7 +6,6 @@ const router = express.Router();
 
 router.use((req, res, next) => {
     const host = req.hostname; 
-    console.log("host",host)
     const subdomain = host.split('.')[0]; 
     console.log("subdomain",subdomain)
 
@@ -18,8 +17,6 @@ router.use((req, res, next) => {
 
 router.use("/", async (req, res, next) => {
     const subdomain = req.subdomain;
-    console.log("subdmoan form /",subdomain)
-
     if (subdomain) {
         try {
             const instructor = await getInstructorSpace(subdomain, req, res, next);
