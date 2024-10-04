@@ -24,7 +24,7 @@ export default function SignIn() {
       const userData = { email, password };
       signInSchema.parse(userData);
 
-      const response = await axios.post('http://localhost:8080/api/v1/signin', userData);
+      const response = await axios.post('http://localhost:3000/api/v1/signin', userData);
       if (response.data && response.data.token) {
         const token = response.data.token.replace('Bearer ', '');
         localStorage.setItem('token', token);

@@ -3,13 +3,20 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import Navbar from '../../../components/Navbar';
+import Navbar from '@/components/Navbar';
 import ReactPlayer from 'react-player';
 import { motion } from 'framer-motion';
+import UpdateCourseModal from '@/components/UpdateCourseModal';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+
+// Set up the worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface User {
   name: string;
   role: string;
+  id: string;
 }
 
 interface Content {
@@ -31,6 +38,7 @@ interface Course {
   description: string;
   price: string;
   sections: Section[];
+  creator: string;
 }
 
 interface CourseProgress {
@@ -43,6 +51,10 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [progress, setProgress] = useState<CourseProgress>({});
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<Content | null>(null);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,13 +64,13 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
     } else {
       fetchUserData(token);
       fetchCourseDetails(token, params.id);
-      fetchProgress(token, params.id);
+      fetchProgress(token, params.id);  // Add this line
     }
   }, [router, params.id]);
 
   const fetchUserData = async (token: string) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/user', {
+      const response = await axios.get('http://localhost:3000/api/v1/user', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -68,13 +80,13 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
     } catch (error) {
       console.error('Error fetching user data:', error);
       localStorage.removeItem('token');
-      router.push('/signin');
+      router.push('/');
     }
   };
 
   const fetchCourseDetails = async (token: string, courseId: string) => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/v1/course/${courseId}`, {
+      const response = await axios.get(`http://localhost:3000/api/v1/course/${courseId}`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -96,7 +108,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
 
   const fetchProgress = async (token: string, courseId: string) => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/v1/progress/${courseId}`, {
+      const response = await axios.get(`http://localhost:3000/api/v1/progress/${courseId}`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -143,6 +155,75 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
     router.push('/signin');
   };
 
+  const handleUpdateCourse = () => {
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+  };
+
+  const handleUpdateSubmit = async (updatedCourseData: Partial<Course>) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      console.log('Sending update request with data:', updatedCourseData);
+      const response = await axios.patch(
+        `http://localhost:3000/api/v1/course/${params.id}`,
+        updatedCourseData,
+        {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      console.log('Update response:', response.data);
+      fetchCourseDetails(token, params.id);
+      setIsUpdateModalOpen(false);
+    } catch (error) {
+      console.error('Error updating course:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', error.response?.data);
+      }
+      setError('Failed to update course. Please try again later.');
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (window.confirm('Are you sure you want to delete this course?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`http://localhost:3000/api/v1/course/${params.id}`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        router.push('/courses');
+      } catch (error) {
+        console.error('Error deleting course:', error);
+        setError('Failed to delete course. Please try again later.');
+      }
+    }
+  };
+
+  const handleContentSelect = (content: Content) => {
+    setSelectedContent(content);
+    if (content.contentType === 'video') {
+      setSelectedVideo(content.url);
+    } else {
+      setSelectedVideo(null);
+      setPageNumber(1); // Reset to first page when selecting a new PDF
+    }
+  };
+
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
+
   if (!user || !course) return <div className="text-gray-800 dark:text-white flex items-center justify-center h-screen">Loading...</div>;
 
   return (
@@ -155,7 +236,25 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
           transition={{ duration: 0.5 }}
           className="px-4 py-6 sm:px-0"
         >
-          <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">{course.title}</h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{course.title}</h1>
+            {user.role === 'Admin' && course.creator === user.id && (
+              <div>
+                {/* <button
+                  onClick={handleUpdateCourse}
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+                >
+                  Update Course
+                </button> */}
+                <button
+                  onClick={handleDeleteCourse}
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Delete Course
+                </button>
+              </div>
+            )}
+          </div>
           {error && (
             <p className="text-red-600 mb-4">{error}</p>
           )}
@@ -178,7 +277,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
             </div>
 
             <div className="flex flex-col md:flex-row gap-6">
-              {/* Video Player */}
+              {/* Content Display */}
               <div className="md:w-2/3">
                 {selectedVideo && (
                   <motion.div 
@@ -193,14 +292,46 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
                       width="100%" 
                       height="400px" 
                       onEnded={() => {
-                        const currentContent = course.sections
-                          .flatMap(section => section.content)
-                          .find(content => content.url === selectedVideo);
-                        if (currentContent) {
-                          markAsCompleted(currentContent.title);
+                        if (selectedContent) {
+                          markAsCompleted(selectedContent.title);
                         }
                       }}
                     />
+                  </motion.div>
+                )}
+                {selectedContent && selectedContent.contentType === 'document' && selectedContent.fileType === 'pdf' && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-6"
+                  >
+                    <Document
+                      file={selectedContent.url}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      className="flex justify-center"
+                    >
+                      <Page pageNumber={pageNumber} />
+                    </Document>
+                    <div className="flex justify-center mt-4">
+                      <button
+                        onClick={() => setPageNumber(pageNumber - 1)}
+                        disabled={pageNumber <= 1}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-l"
+                      >
+                        Previous
+                      </button>
+                      <p className="bg-gray-200 px-4 py-2">
+                        Page {pageNumber} of {numPages}
+                      </p>
+                      <button
+                        onClick={() => setPageNumber(pageNumber + 1)}
+                        disabled={pageNumber >= (numPages || 0)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-r"
+                      >
+                        Next
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </div>
@@ -223,13 +354,13 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
                           {section.content.map((content, contentIndex) => (
                             <motion.li 
                               key={contentIndex} 
-                              className={`p-2 rounded-md ${
-                                content.contentType === 'video'
-                                  ? 'cursor-pointer bg-blue-50 dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-800'
-                                  : 'bg-gray-50 dark:bg-gray-700'
+                              className={`p-2 rounded-md cursor-pointer ${
+                                content === selectedContent
+                                  ? 'bg-blue-100 dark:bg-blue-800'
+                                  : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
                               } ${progress[content.title] ? 'border-l-4 border-green-500' : ''}`}
                               whileHover={{ scale: 1.02 }}
-                              onClick={() => content.contentType === 'video' && setSelectedVideo(content.url)}
+                              onClick={() => handleContentSelect(content)}
                             >
                               <div className="flex items-center">
                                 <span className="mr-2 text-lg">
@@ -267,6 +398,13 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
             </div>
           </div>
         </motion.div>
+        {isUpdateModalOpen && course && (
+          <UpdateCourseModal
+            course={course}
+            onClose={handleCloseUpdateModal}
+            onSubmit={handleUpdateSubmit}
+          />
+        )}
       </main>
     </div>
   );

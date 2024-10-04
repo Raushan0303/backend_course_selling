@@ -10,11 +10,14 @@ export default function Verify() {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-
   useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (emailParam) {
-      setEmail(emailParam);
+    if (searchParams) {
+      const emailParam = searchParams.get('email');
+      if (emailParam) {
+        setEmail(emailParam);
+      } else {
+        router.push('/signup');
+      }
     } else {
       router.push('/signup');
     }
@@ -25,7 +28,7 @@ export default function Verify() {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/verify', { email, otp });
+      const response = await axios.post('http://localhost:3000/api/v1/verify', { email, otp });
       if (response.data.success) {
         router.push('/signin');
       } else {

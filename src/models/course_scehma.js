@@ -77,16 +77,16 @@ const courseSchema = new Schema({
     type: String,
     required: true
  },  
-  price:{
+  price: {
     type: String,
     required: true
   },
   sections: [sectionSchema],  
-//   createdBy: {
-//     type: Schema.Types.ObjectId, 
-//     ref: 'User',
-//     required: true 
-//  }  // Reference to the course creator (optional)
+  creator: {
+    type: Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true 
+  }
 });
 
 const Course = mongoose.model('Course', courseSchema);

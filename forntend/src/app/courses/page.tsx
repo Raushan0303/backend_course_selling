@@ -36,7 +36,7 @@ export default function Courses() {
 
   const fetchUserData = async (token: string) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/user', {
+      const response = await axios.get('http://localhost:3000/api/v1/user', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -52,7 +52,7 @@ export default function Courses() {
 
   const fetchCourses = async (token: string) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/courses', {
+      const response = await axios.get('http://localhost:3000/api/v1/courses', {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
