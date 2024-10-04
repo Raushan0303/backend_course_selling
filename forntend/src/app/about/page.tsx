@@ -44,7 +44,7 @@ export default function About() {
     router.push('/signin');
   };
 
-  if (!user) return <div className="text-gray-800 dark:text-white">Loading...</div>;
+  if (!user) return <div className="text-gray-800 dark:text-white flex items-center justify-center h-screen">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">

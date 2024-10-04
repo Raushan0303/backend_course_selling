@@ -16,6 +16,7 @@ import cors from 'cors';
 import mediasoup from 'mediasoup';
 import { PeerServer } from 'peer';
 import dotenv from 'dotenv';
+import progressRoutes from './routes/progressRouter.js';
 
 
 dotenv.config();
@@ -63,6 +64,7 @@ app.use(passport.session());
 app.use('/api/v1', userRoutes);
 app.use('/api/v1', courseRoute);
 app.use('/api/v1', roomRoutes);
+app.use('/api/v1', progressRoutes);
 app.use("/", instructorRoutes);
 
 
