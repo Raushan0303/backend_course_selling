@@ -28,6 +28,16 @@ export default function Navbar({ userName, userRole, onLogout }: NavbarProps) {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  const canCreateCourse = (role: string) => ['Admin', 'Instructor'].includes(role);
+
+  const handleCreateCourse = () => {
+    if (canCreateCourse(userRole)) {
+      router.push('/create-course');
+    } else {
+      alert("You don't have permission to create a course.");
+    }
+  };
+
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -44,10 +54,13 @@ export default function Navbar({ userName, userRole, onLogout }: NavbarProps) {
                 <Link href="/courses" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                   Courses
                 </Link>
-                {userRole === 'Admin' && (
-                  <Link href="/create-course" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                {canCreateCourse(userRole) && (
+                  <button 
+                    onClick={handleCreateCourse}
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  >
                     Create Course
-                  </Link>
+                  </button>
                 )}
                 <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                   About
@@ -116,7 +129,7 @@ export default function Navbar({ userName, userRole, onLogout }: NavbarProps) {
             <Link href="/courses" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
               Courses
             </Link>
-            {userRole === 'Admin' && (
+            {canCreateCourse(userRole) && (
               <Link href="/create-course" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
                 Create Course
               </Link>

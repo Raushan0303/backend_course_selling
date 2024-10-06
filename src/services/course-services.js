@@ -109,6 +109,20 @@ class CourseService {
             throw new Error("Error deleting section from course");
         }
     }
+
+    async updateCourse(courseId, updateData) {
+        try {
+            const updatedCourse = await Course.findByIdAndUpdate(courseId, updateData, { new: true });
+            if (!updatedCourse) {
+                throw new Error("Course not found");
+            }
+            return updatedCourse;
+        } catch (error) {
+            console.error("Error updating course:", error);
+            throw new Error("Error updating course");
+        }
+    }
+    
     async getSectionContent(courseId, sectionId, userId) {
         try {
             const course = await Course.findById(courseId).populate('sections.content');

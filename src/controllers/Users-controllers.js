@@ -55,6 +55,27 @@ export const SignUp = async (req, res) => {
       role,
       subdomain,
     });
+      if (role === 'Instructor') {
+          subdomain = generateSubdomain(name);
+          // Check if the generated subdomain already exists
+          const existingUser = await User.findOne({ subdomain });
+          if (existingUser) {
+              // If it exists, append a number to make it unique
+              let counter = 1;
+              while (await User.findOne({ subdomain: `${subdomain}${counter}` })) {
+                  counter++;
+              }
+              subdomain = `${subdomain}${counter}`;
+          }
+      }
+
+      // const newUser = new User({
+      //     name,
+      //     email,
+      //     password: hashedPassword,
+      //     role,
+      //     subdomain,
+      // });
 
     // If the user is an Instructor, create the instructor details
     if (role === 'Instructor') {
@@ -64,6 +85,15 @@ export const SignUp = async (req, res) => {
         profilePicture: profilePicture || '',
       });
     }
+      await newUser.save();
+
+      if (role === 'Instructor') {
+          await Instructor.create({
+              user: newUser._id, 
+              bio: bio || '', 
+              profilePicture: profilePicture || '', 
+          });
+      }
 
     // Send OTP (Assuming this is for verification)
     await sendOtp(email);
@@ -121,48 +151,57 @@ export const signin = async (req, res) => {
     }
   };
 
-  export const verify = async (req, res) => {
-    const { email, otp } = req.body;
-  
-    try {
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(404).json({ 
-          message: "User not found", 
-          success: false 
-        });
-      }
-  
-      const dbOtp = user.otp;
-  
-      if (dbOtp === otp) {
-        await User.findOneAndUpdate(
-          { email }, 
-          { isVerified: true },
-          { new: true } 
-        );
-  
-        return res.status(201).json({
-          message: "User is verified",
-          success: true,
-          error: {}
-        });
-      } else {
-        return res.status(400).json({
-          message: "Invalid OTP",
-          success: false
-        });
-      }
-    } catch (error) {
-      console.error("Error verifying user:", error);
-  
-      return res.status(500).json({
-        message: "Server error",
-        success: false,
-        error: error.message 
+export const verify = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        message: "User not found", 
+        success: false 
       });
     }
-  };
+
+    const dbOtp = user.otp;
+
+    if (dbOtp === otp) {
+      user.isVerified = true;
+
+      // Generate subdomain for Instructor
+      if (user.role === 'Instructor' && !user.subdomain) {
+        let subdomain = generateSubdomain(user.name);
+        let counter = 1;
+        while (await User.findOne({ subdomain })) {
+          subdomain = `${generateSubdomain(user.name)}${counter}`;
+          counter++;
+        }
+        user.subdomain = subdomain;
+      }
+
+      await user.save();
+
+      return res.status(201).json({
+        message: "User is verified",
+        success: true,
+        error: {}
+      });
+    } else {
+      return res.status(400).json({
+        message: "Invalid OTP",
+        success: false
+      });
+    }
+  } catch (error) {
+    console.error("Error verifying user:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+      success: false,
+      error: error.message 
+    });
+  }
+};
 
 export const googleAuth = passport.authenticate('google', {
   scope: ['profile', 'email']  

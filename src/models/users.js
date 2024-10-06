@@ -37,11 +37,8 @@ const userSchema = new mongoose.Schema({
     },
     subdomain: {
         type: String,   
-        required: function() {
-            return this.role === 'Instructor';  // Subdomain is required only for Instructor
-        },
-        unique: true,  // Subdomain should be unique across instructors
-        sparse: true   // Allow null or undefined for other roles
+        sparse: true,   // This allows null values and maintains uniqueness for non-null values
+        unique: true    // Subdomain should be unique across instructors
     },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
 }, { timestamps: true });

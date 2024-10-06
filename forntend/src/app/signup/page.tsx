@@ -9,7 +9,7 @@ const signUpSchema = z.object({
   email: z.string().min(8).max(30).email(),
   name: z.string().min(3).max(30),
   password: z.string().min(5).max(30),
-  role: z.enum(['Admin', 'User']),
+  role: z.enum(['Admin', 'User', 'Instructor']),
 });
 
 export default function SignUp() {
@@ -28,7 +28,9 @@ export default function SignUp() {
       const userData = { name, email, password, role };
       signUpSchema.parse(userData);
 
-      const response = await axios.post('http://localhost:8080/api/v1/signup', userData);
+      const response = await axios.post('http://localhost:3000/api/v1/signup', userData, {
+        withCredentials: true
+      });
       if (response.data.success) {
         router.push(`/verify?email=${email}`);
       } else {
@@ -106,6 +108,7 @@ export default function SignUp() {
           >
             <option value="User">User</option>
             <option value="Admin">Admin</option>
+            <option value="Instructor">Instructor</option>
           </select>
         </div>
         <div className="flex items-center justify-between">

@@ -3,10 +3,10 @@ import CourseService from "../services/course-services.js";
 const courseService = new CourseService();
 
 
-export const create = async(req,res) => {
+export const create = async(req, res) => {
     try {
-        const courseData = req.body;
-        console.log("course data: ",courseData)
+        const courseData = { ...req.body, creator: req.user.id };
+        console.log("course data: ", courseData)
         const courseCreated = await courseService.createCourse(courseData);
 
         res.status(200).json({
@@ -110,26 +110,29 @@ export const getCourseById = async (req, res) => {
 export const deleteCourse = async (req, res) => {
     try {
         const { courseId } = req.params; 
+        const userId = req.user.id;
 
-        const deletedCourse = await courseService.deleteCourse(courseId);
+        const course = await courseService.getCourseById(courseId);
 
-        if (!deletedCourse) {
-            return res.status(404).json({
-                type: "error",
-                message: "Course not found",
-            });
+        if (!course) {
+            return res.status(404).json({ message: "Course not found" });
         }
 
+        if (course.creator.toString() !== userId) {
+            return res.status(403).json({ message: "Not authorized to delete this course" });
+        }
+
+        await courseService.deleteCourse(courseId);
+
         res.status(200).json({
-            type: "success",
+            type: "Success",
             message: "Course deleted successfully",
-            data: deletedCourse
         });
     } catch (error) {
-        console.error("Error in deleteCourse controller:", error);
+        console.error("Error deleting course", error);
         res.status(500).json({
             type: "error",
-            message: "Internal server error",
+            message: "Internal Server Error",
             error: error.message
         });
     }
@@ -151,6 +154,39 @@ export const deleteCourseSection = async (req, res) => {
         res.status(500).json({
             type: "error",
             message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+export const updateCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const updateData = req.body;
+        const userId = req.user.id;
+
+        const course = await courseService.getCourseById(courseId);
+
+        if (!course) {
+            return res.status(404).json({ message: "Course not found" });
+        }
+
+        if (course.creator.toString() !== userId) {
+            return res.status(403).json({ message: "Not authorized to update this course" });
+        }
+
+        const updatedCourse = await courseService.updateCourse(courseId, updateData);
+
+        res.status(200).json({
+            type: "Success",
+            message: "Course updated successfully",
+            data: updatedCourse,
+        });
+    } catch (error) {
+        console.error("Error updating course", error);
+        res.status(500).json({
+            type: "error",
+            message: "Internal Server Error",
             error: error.message
         });
     }
