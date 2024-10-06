@@ -26,7 +26,7 @@ router.use("/", async (req, res, next) => {
             }
 
             res.status(200).json({
-                subdomain: subdomain,  // Including the subdomain in the response
+                subdomain: subdomain, 
                 instructorName: instructor.name,
                 courses: instructor.courses,
                 details: instructor.details,
