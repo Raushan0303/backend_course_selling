@@ -37,11 +37,19 @@ const userSchema = new mongoose.Schema({
     },
     subdomain: {
         type: String,   
-        sparse: true,   // This allows null values and maintains uniqueness for non-null values
-        unique: true    // Subdomain should be unique across instructors
+        sparse: true,   
+        unique: true   
     },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+    notebooks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Notebook'
+    }],
 }, { timestamps: true });
+
+userSchema.index({ email: 1 });
+userSchema.index({ googleId: 1, sparse: true });
+userSchema.index({ subdomain: 1, sparse: true });
 
 const User = mongoose.model('User', userSchema);
 

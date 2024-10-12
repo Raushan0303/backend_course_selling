@@ -40,7 +40,6 @@ export const SignUp = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     let subdomain = null;
 
-    // Generate subdomain only for instructors
     if (role === 'Instructor') {
       subdomain = await uniqueSubdomain(generateSubdomain(name));
     }
@@ -193,7 +192,6 @@ async function uniqueSubdomain(base) {
   let subdomain = base;
   let counter = 1;
   
-  // Check for existing instructors with the same subdomain
   while (await User.findOne({ subdomain })) {
       subdomain = `${base}${counter}`;
       counter++;
