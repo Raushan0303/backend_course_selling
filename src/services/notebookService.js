@@ -1,4 +1,4 @@
-import Notebook from '../models/notebook/notebookSchema.js';
+import Notebook from '../models/notebookSchema.js';
 
 class NotebookService {
     async createNotebook(data) {

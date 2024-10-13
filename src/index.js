@@ -8,6 +8,8 @@ import userRoutes from './routes/userRouter.js';
 import courseRoute from './routes/courseRouter.js';
 import roomRoutes from './routes/roomRoutes.js';
 import instructorRoutes from "./routes/instructorRoutes.js"; 
+import notebookRoutes from "./routes/notebookRoutes.js";
+import noteSectionRoutes from "./routes/sectionRoutes.js"
 import { Secret_key } from './config/config.js';
 import http from "http";
 import { Server } from 'socket.io';
@@ -62,6 +64,8 @@ app.use('/api/v1', userRoutes);
 app.use('/api/v1', courseRoute);
 app.use('/api/v1', roomRoutes);
 app.use('/api/v1', progressRoutes);
+app.use('/api/v1',notebookRoutes);
+app.use('/api/v1',noteSectionRoutes);
 app.use("/", instructorRoutes);
 
 // 404 route handler

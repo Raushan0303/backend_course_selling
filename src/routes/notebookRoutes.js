@@ -5,13 +5,11 @@ import { authenticateToken } from '../middleware/auth.js';// Assuming you have a
 
 const router = express.Router();
 
-router.route('/')
-    .post(authenticateToken, NotebookController.createNotebook)
-    .get(protect, NotebookController.getNotebooks);
+router.post('/create-notebook',authenticateToken, NotebookController.createNotebook)
+router.get("/get-notebook",authenticateToken, NotebookController.getNotebooks);
 
-router.route('/:id')
-    .get(authenticateToken, NotebookController.getNotebookById)
-    .put(authenticateToken, NotebookController.updateNotebook)
-    .delete(authenticateToken, NotebookController.deleteNotebook);
+router.get('/get-notebook/:id',authenticateToken, NotebookController.getNotebookById)
+router.put('update-notebook/:id',authenticateToken, NotebookController.updateNotebook)
+router.delete('delete-notebook/:id',authenticateToken, NotebookController.deleteNotebook);
 
 export default router;
