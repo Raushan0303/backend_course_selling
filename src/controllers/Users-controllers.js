@@ -44,6 +44,8 @@ export const SignUp = async (req, res) => {
       subdomain = await uniqueSubdomain(generateSubdomain(name));
     }
 
+    
+
     const newUser = await User.create({
       name,
       email,
@@ -57,6 +59,7 @@ export const SignUp = async (req, res) => {
         user: newUser._id,
         bio: bio || '',
         profilePicture: profilePicture || '',
+        subdomain
       });
     }
 

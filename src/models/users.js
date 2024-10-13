@@ -35,10 +35,9 @@ const userSchema = new mongoose.Schema({
     otpExpires: {
         type: Date  
     },
-    subdomain: {
-        type: String,   
-        sparse: true,   
-        unique: true   
+    Instructor : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Instructor'
     },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
     notebooks: [{

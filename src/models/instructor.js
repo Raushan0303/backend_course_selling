@@ -13,6 +13,12 @@ const instructorSchema = new mongoose.Schema({
         type: String,
         default: "Default Branding",  
     },
+    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+    subdomain: {
+        type: String,   
+        sparse: true,   
+        unique: true   
+    },
     
 }, { timestamps: true });
 
